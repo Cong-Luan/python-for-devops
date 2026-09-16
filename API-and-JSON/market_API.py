@@ -1,5 +1,5 @@
 #Import module 
-from requests import Response
+import requests
 import os
 import sys
 import requests
