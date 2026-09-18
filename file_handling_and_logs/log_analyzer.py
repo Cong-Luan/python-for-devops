@@ -1,9 +1,10 @@
 #Import Path và json
 import json
 from pathlib import Path
+import re
 
 #Khai báo level và đường dẫn
-LEVELS = ("INFO", "WARNING", "ERROR")
+LEVELS = re.compile(r"(INFO|WARNING|ERROR|DEBUG|CRITICAL)", re.IGNORECASE)
 LOG_FILE = Path(__file__).parent / "webserver.log"
 
 #Hàm đọc từng dòng file .log
@@ -19,10 +20,8 @@ def read_file(path):
 def analyze_logs(lines):
     counts = {L : 0 for L in LEVELS}
     for line in lines:
-        tokens = set(line.split())
-        for L in LEVELS:
-            if L in tokens:
-                counts[L] += 1
+        match = LEVELS.search(line)
+        counts[match.group(1).upper()] += 1
     return counts
 
 #Ghi kết quả ra file
