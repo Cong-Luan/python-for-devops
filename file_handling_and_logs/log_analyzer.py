@@ -10,7 +10,7 @@ LEVELS_PATTERN = re.compile(r"\b(" + "|".join(LEVELS) + r")\b", re.IGNORECASE)
 #Logging 
 logging.basicConfig(
     level = logging.INFO,
-    format = '%(levelname)s - %(asctime)s - %(name)s - %(message)s',
+    format = '%(levelname)s - %(asctime)s - %(name)s : %(message)s',
     handlers= [
         logging.FileHandler(f'script.py.log', encoding='utf-8'),    #tạo file .log ghi log
         logging.StreamHandler()                                     #hiển thị log ra màn hình console
