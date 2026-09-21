@@ -4,7 +4,8 @@ from pathlib import Path
 import re
 import argparse
 #Khai báo level và đường dẫn
-LEVELS = re.compile(r"(INFO|WARNING|ERROR|DEBUG|CRITICAL)", re.IGNORECASE)
+LEVELS = ('INFO','WARNING','ERROR','DEBUG','CRITICAL')
+LEVELS_PATTERN = re.compile(r"\b(" + "|".join(LEVELS) + r")\b", re.IGNORECASE)
 
 #Tìm file .log trong thư mục 
 def find_log_file(directory):
@@ -21,7 +22,7 @@ def find_log_file(directory):
 def parse_arg():
     parser = argparse.ArgumentParser(description="Phân tích lỗi trong file log")
     parser.add_argument("logfile", nargs="?", default=None, type=Path)
-    parser.add_argument("--o", "--output", default="log_summary", help="Tên file báo cáo")
+    parser.add_argument("--output", "--o", default="log_summary", help="Tên file báo cáo")
     args = parser.parse_args()
 
     if args.logfile is not None and args.logfile.suffix != ".log":
@@ -33,20 +34,21 @@ def read_file(path):
     try:
         with open(path, "r", encoding="utf-8") as f:
             return f.readlines()
-    except FileNotFoundError:
-        print(f"Không tìm thấy file: {path}")
+    except (FileNotFoundError, PermissionError, UnicodeDecodeError) as e:
+        print(f"Lỗi đọc file: {e}")
         return []
 
 #Hàm Đếm số lần xuất hiện của mỗi level
 def analyze_logs(lines):
     counts = {L : 0 for L in LEVELS}
     for line in lines:
-        match = LEVELS.search(line)
-        counts[match.group(1).upper()] += 1
+        match = LEVELS_PATTERN.search(line)
+        if match:
+            counts[match.group(1).upper()] += 1
     return counts
 
 #Ghi kết quả ra file
-def write_summary(counts, stem='report'):
+def write_summary(counts, stem):
     path = Path(__file__).parent
     with open(path / f"{stem}.txt", "w", encoding="utf-8") as f:
         for level in LEVELS:
@@ -63,7 +65,7 @@ def main():
     
     if log_file is None:
         print("Không tìm thấy file .log")
-        return
+        return None
     
     lines = read_file(log_file)
 
