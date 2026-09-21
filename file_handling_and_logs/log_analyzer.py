@@ -1,4 +1,5 @@
 #Import Path và json
+import logging
 import json
 from pathlib import Path
 import re
@@ -6,16 +7,26 @@ import argparse
 #Khai báo level và đường dẫn
 LEVELS = ('INFO','WARNING','ERROR','DEBUG','CRITICAL')
 LEVELS_PATTERN = re.compile(r"\b(" + "|".join(LEVELS) + r")\b", re.IGNORECASE)
+#Logging 
+logging.basicConfig(
+    level = logging.INFO,
+    format = '%(levelname)s - %(asctime)s - %(name)s - %(message)s',
+    handlers= [
+        logging.FileHandler(f'script.py.log', encoding='utf-8'),    #tạo file .log ghi log
+        logging.StreamHandler()                                     #hiển thị log ra màn hình console
+    ]
+)
+logger = logging.getLogger(__name__)
 
 #Tìm file .log trong thư mục 
 def find_log_file(directory):
     log_file = list(directory.glob('*.log'))
     if not log_file:
-        print(f"Không tìm thấy file log trong {directory}")
+        logger.warning(f"Không tìm thấy file log trong {directory.name}")
         return
     new_file = max(log_file, key = lambda p: p.stat().st_mtime)
     if len(log_file) > 1:
-        print(f"\n tim thấy nhiều file log, sử dụng file mới nhất: {new_file}")
+        logger.info(f"\n tim thấy nhiều file log, sử dụng file mới nhất: {new_file.name}")
     return new_file
 
 #Đường dẫn
@@ -35,7 +46,7 @@ def read_file(path):
         with open(path, "r", encoding="utf-8") as f:
             return f.readlines()
     except (FileNotFoundError, PermissionError, UnicodeDecodeError) as e:
-        print(f"Lỗi đọc file: {e}")
+        logger.error(f"Lỗi đọc file: {e}")
         return []
 
 #Hàm Đếm số lần xuất hiện của mỗi level
@@ -64,21 +75,21 @@ def main():
     log_file = args.logfile or find_log_file(here)
     
     if log_file is None:
-        print("Không tìm thấy file .log")
+        logger.error("Không tìm thấy file .log")
         return None
     
     lines = read_file(log_file)
 
     if not lines:
-        print("Không có thông tin trong file")
+        logger.warning("Không có thông tin trong file")
         return
     counts = analyze_logs(lines)
 
     for level in LEVELS:
-        print(f"{level:7}: {counts[level]}")
+        logger.info(f"{level:7}: {counts[level]}")
     
     write_summary(counts, args.output)
-    print(f"\nKết quả được ghi vào {args.output}.txt và {args.output}.json")
+    logger.info(f"\nKết quả được ghi vào {args.output}.txt và {args.output}.json")
 
 
 if __name__ == "__main__":

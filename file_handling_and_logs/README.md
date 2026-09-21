@@ -9,3 +9,11 @@ import argparse
 ```bash
 import logging 
 ```
+
+- Sử dụng thêm lambda
+```bash
+new_file = max(log_file, key = lambda p: p.stat().st_mtime)
+```
+- Với mỗi file trong log_file gọi qua lambda p và lấy time sửa đổi cuối cùng
+- .st_mtime : càng lớn thì file càng mới
+
